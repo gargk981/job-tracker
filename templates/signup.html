@@ -1,7 +1,59 @@
-<h2>Signup</h2>
-<form method="post">
-    <input name="username" placeholder="Username" required>
-    <input name="password" type="password" required>
-    <button>Signup</button>
-</form>
-<a href="/login">Login</a>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Signup</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: linear-gradient(135deg, #43cea2, #185a9d);
+            display: flex;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #43cea2;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        a {
+            display: block;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="card">
+    <h2>Create Account 🚀</h2>
+
+    <form method="post">
+        <input name="username" placeholder="Username" required>
+        <input name="password" type="password" placeholder="Password" required>
+        <button>Signup</button>
+    </form>
+
+    <a href="/login">Already have account?</a>
+</div>
+</body>
+</html>

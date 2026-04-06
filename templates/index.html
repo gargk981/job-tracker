@@ -257,7 +257,7 @@ Track your job applications smarter
                         <button class="delete-btn">Delete</button>
                     </a>
 
-                    <form action="/update/{{ loop.index0 }}" method="post">
+                    <form action="/update/{{ job.id }}" method="post">
                         <select name="status">
                             <option value="applied">Applied</option>
                             <option value="interview_round_1">R1</option>

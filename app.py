@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 import pandas as pd
 import os
@@ -7,26 +6,11 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from flask import Flask, render_template, request, redirect, session
 import sqlite3
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 
 app = Flask(__name__)
 app.secret_key = "mysecret123"
-
-jobs = []
-users = {}
-
-# Load jobs
-def load_jobs():
-    global jobs
-    try:
-        with open("jobs.json", "r") as file:
-            jobs = json.load(file)
-    except FileNotFoundError:
-        jobs = []
-
-# Save jobs
-def save_jobs():
-    with open("jobs.json", "w") as file:
-        json.dump(jobs, file, indent=4)
 
 
 def generate_graph(jobs):
@@ -68,7 +52,7 @@ def generate_graph(jobs):
     if not os.path.exists("static"):
         os.makedirs("static")
 
-    path = "static/status_chart.png"
+    path = f"static/status_chart_{jobs[0]['user_id']}.png"
     plt.savefig(path)
     plt.close()
 
@@ -105,6 +89,14 @@ def init_db():
     conn.commit()
     conn.close()
 
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if "user_id" not in session:
+            return redirect("/login")
+        return f(*args, **kwargs)
+    return wrapper
+
 #USER SIGNUP
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
@@ -116,12 +108,15 @@ def signup():
         cursor = conn.cursor()
 
         try:
+            # 🔐 Hash password
+            hashed_password = generate_password_hash(password)
+
             cursor.execute(
                 "INSERT INTO users (username, password) VALUES (?, ?)",
-                (username, password)
+                (username, hashed_password)
             )
             conn.commit()
-        except:
+        except sqlite3.IntegrityError:
             return "User already exists"
 
         conn.close()
@@ -138,13 +133,13 @@ def login():
 
         conn = get_db_connection()
         user = conn.execute(
-            "SELECT * FROM users WHERE username=? AND password=?",
-            (username, password)
+            "SELECT * FROM users WHERE username=?",
+            (username,)
         ).fetchone()
 
         conn.close()
 
-        if user:
+        if user and check_password_hash(user["password"], password):
             session["user_id"] = user["id"]
             return redirect("/")
         else:
@@ -154,6 +149,7 @@ def login():
 
 # HOME PAGE
 @app.route("/")
+@login_required
 def home():
     if "user_id" not in session:
         return redirect("/login")
@@ -167,9 +163,35 @@ def home():
     ).fetchall()
     conn.close()
 
+    # Convert to list for graph
+    jobs_list = [dict(job) for job in jobs]
+
+    graph_path = generate_graph(jobs_list)
+
+    # Stats
+    total = len(jobs_list)
+    applied = len([j for j in jobs_list if j["status"] == "applied"])
+    r1 = len([j for j in jobs_list if j["status"] == "interview_round_1"])
+    r2 = len([j for j in jobs_list if j["status"] == "interview_round_2"])
+    selected = len([j for j in jobs_list if j["status"] == "selected"])
+    rejected = len([j for j in jobs_list if j["status"] == "rejected"])
+
+    return render_template(
+        "index.html",
+        jobs=jobs,
+        total=total,
+        applied=applied,
+        r1=r1,
+        r2=r2,
+        selected=selected,
+        rejected=rejected,
+        graph_path=graph_path
+    )
+
 
 # ADD JOB
 @app.route("/add", methods=["POST"])
+@login_required
 def add_job():
     if "user_id" not in session:
         return redirect("/login")
@@ -193,9 +215,19 @@ def add_job():
 
 # DELETE JOB
 @app.route("/delete/<int:id>")
+@login_required
 def delete_job(id):
+    if "user_id" not in session:
+        return redirect("/login")
+
     conn = get_db_connection()
-    conn.execute("DELETE FROM jobs WHERE id=?", (id,))
+    user_id = session["user_id"]
+
+    conn.execute(
+        "DELETE FROM jobs WHERE id=? AND user_id=?",
+        (id, user_id)
+    )
+    
     conn.commit()
     conn.close()
 
@@ -203,13 +235,17 @@ def delete_job(id):
 
 # UPDATE STATUS
 @app.route("/update/<int:id>", methods=["POST"])
+@login_required
 def update_job(id):
+    if "user_id" not in session:
+        return redirect("/login")
+
     new_status = request.form["status"]
 
     conn = get_db_connection()
     conn.execute(
-        "UPDATE jobs SET status=? WHERE id=?",
-        (new_status, id)
+        "UPDATE jobs SET status=? WHERE id=? AND user_id=?",
+        (new_status, id, session["user_id"])
     )
     conn.commit()
     conn.close()
@@ -219,13 +255,12 @@ def update_job(id):
 #LOGOUT
 @app.route("/logout")
 def logout():
-    session.pop("user", None)
+    session.pop("user_id", None)
     return redirect("/login")
 
 init_db()
 
 if __name__ == "__main__":
-    load_jobs()
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
 

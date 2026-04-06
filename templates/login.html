@@ -1,7 +1,59 @@
-<h2>Login</h2>
-<form method="post">
-    <input name="username" placeholder="Username" required>
-    <input name="password" type="password" placeholder="Password" required>
-    <button>Login</button>
-</form>
-<a href="/signup">Signup</a>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            height: 100vh;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            width: 300px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+        }
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        a {
+            display: block;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+<div class="card">
+    <h2>Welcome Back 👋</h2>
+
+    <form method="post">
+        <input name="username" placeholder="Username" required>
+        <input name="password" type="password" placeholder="Password" required>
+        <button>Login</button>
+    </form>
+
+    <a href="/signup">Create account</a>
+</div>
+</body>
+</html>
