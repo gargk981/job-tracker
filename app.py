@@ -146,6 +146,9 @@ def home():
 # ADD JOB
 @app.route("/add", methods=["POST"])
 def add_job():
+    if "user" not in session:
+        return redirect("/login")
+
     username = session["user"]
     jobs = users[username]["jobs"]
 
@@ -166,6 +169,9 @@ def add_job():
 # DELETE JOB
 @app.route("/delete/<int:index>")
 def delete_job(index):
+    if "user" not in session:
+        return redirect("/login")
+
     username = session["user"]
     jobs = users[username]["jobs"]
 
@@ -177,6 +183,9 @@ def delete_job(index):
 # UPDATE STATUS
 @app.route("/update/<int:index>", methods=["POST"])
 def update_job(index):
+    if "user" not in session:
+        return redirect("/login")
+
     username = session["user"]
     jobs = users[username]["jobs"]
 
