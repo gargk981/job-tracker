@@ -11,6 +11,7 @@ app = Flask(__name__)
 app.secret_key = "mysecret123"
 
 jobs = []
+users = {}
 
 # Load jobs
 def load_jobs():
@@ -25,6 +26,7 @@ def load_jobs():
 def save_jobs():
     with open("jobs.json", "w") as file:
         json.dump(jobs, file, indent=4)
+
 
 def generate_graph(jobs):
     if not jobs:
@@ -71,13 +73,55 @@ def generate_graph(jobs):
 
     return path
 
+#USER SIGNUP
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+    
+        if username in users:
+            return "User already exists"
+
+        users[username]={
+            "password" : password,
+            "jobs" : []
+        }
+
+        return redirect("/login")
+    
+    return render_template("signup.html")
+
+#USER LOGIN
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        username = request.form["username"]
+        password = request.form["password"]
+
+        if username in users and users[username]["password"] == password:
+            session["user"] = username
+            return redirect("/")
+        else:
+            return "Invalid credentials"
+
+    return render_template("login.html")
 
 # HOME PAGE
 @app.route("/")
 def home():
-    jobs = session.get("jobs", [])
+    if "user" not in session:
+        return redirect("/login")
+
+    username = session["user"]
+    if username not in users:   
+        session.pop("user")
+        return redirect("/login")
+    
+    jobs = users[username]["jobs"]
 
     total = len(jobs)
+
     applied = len([j for j in jobs if j["status"] == "applied"])
     r1 = len([j for j in jobs if j["status"] == "interview_round_1"])
     r2 = len([j for j in jobs if j["status"] == "interview_round_2"])
@@ -98,10 +142,12 @@ def home():
         graph_path=graph_path
     )
 
+
 # ADD JOB
 @app.route("/add", methods=["POST"])
 def add_job():
-    jobs = session.get("jobs", [])
+    username = session["user"]
+    jobs = users[username]["jobs"]
 
     company = request.form["company"]
     role = request.form["role"]
@@ -115,33 +161,37 @@ def add_job():
         "date": date
     })
 
-    session["jobs"] = jobs
-
     return redirect("/")
 
 # DELETE JOB
 @app.route("/delete/<int:index>")
 def delete_job(index):
-    jobs = session.get("jobs", [])
+    username = session["user"]
+    jobs = users[username]["jobs"]
 
     if 0 <= index < len(jobs):
         jobs.pop(index)
 
-    session["jobs"] = jobs
     return redirect("/")
 
 # UPDATE STATUS
 @app.route("/update/<int:index>", methods=["POST"])
 def update_job(index):
-    jobs = session.get("jobs", [])
+    username = session["user"]
+    jobs = users[username]["jobs"]
 
     new_status = request.form["status"]
 
     if 0 <= index < len(jobs):
         jobs[index]["status"] = new_status
 
-    session["jobs"] = jobs
     return redirect("/")
+
+#LOGOUT
+@app.route("/logout")
+def logout():
+    session.pop("user", None)
+    return redirect("/login")
 
 if __name__ == "__main__":
     load_jobs()
