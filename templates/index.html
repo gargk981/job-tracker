@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Job Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+            vertical-align: middle; /* aligns content */
+        }
+
+        td {
+            word-wrap: break-word;
+        }
+
+        body {
+            font-family: Arial;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+
+        /* 🔥 Responsive cards */
+        .card {
+            flex: 1;
+            text-align: center;
+            min-width: 150px;
+        }
+
+        /* 🔥 Stack stats on mobile */
+        @media (max-width: 768px) {
+            div[style*="display:flex"] {
+                flex-direction: column !important;
+            }
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #333;
+            color: white;
+        }
+
+        button {
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        /* mobile buttons */
+        @media (max-width: 768px) {
+            button {
+                font-size: 10px;
+                padding: 5px;
+            }
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        td {
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        select {
+            padding: 4px;
+            font-size: 12px;
+        }
+
+        .stat-card {
+            flex: 1;
+            min-width: 120px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h4 {
+            margin: 0;
+            font-size: 14px;
+            color: gray;
+        }
+
+        .stat-card p {
+            font-size: 22px;
+            margin: 5px 0 0;
+            font-weight: bold;
+        }
+
+        .actions {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .actions form {
+            display: flex;
+            gap: 5px;
+        }
+
+        .delete-btn {
+            background: #ff4d4d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        .update-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        /* 🔥 MOBILE FIX */
+        @media (max-width: 768px) {
+
+            .actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .actions form {
+                flex-direction: column;
+            }
+
+            .actions button,
+            .actions select {
+                width: 100%;
+            }
+        }
+
+        /* Colors */
+        .applied { border-top: 4px solid orange; }
+        .r1 { border-top: 4px solid blue; }
+        .r2 { border-top: 4px solid purple; }
+        .selected { border-top: 4px solid green; }
+        .rejected { border-top: 4px solid red; }
+
+        th:nth-child(1) { width: 20%; }  /* Company */
+        th:nth-child(2) { width: 20%; }  /* Role */
+        th:nth-child(3) { width: 15%; }  /* Status */
+        th:nth-child(4) { width: 20%; }  /* Date */
+        th:nth-child(5) { width: 25%; }  /* Actions */
+    </style>
+</head>
+
+<body>
+
+<h1 style="text-align:center;">🚀 Job Tracker</h1>
+<p style="text-align:center; color:gray;">
+Track your job applications smarter
+</p>
+
+<!-- ADD FORM -->
+<div class="card">
+    <h3>Add Job</h3>
+
+    <form action="/add" method="post">
+        <input type="text" name="company" placeholder="Company" required>
+        <input type="text" name="role" placeholder="Role" required>
+
+        <select name="status">
+            <option value="applied">Applied</option>
+            <option value="interview_round_1">Interview Round 1</option>
+            <option value="interview_round_2">Interview Round 2</option>
+            <option value="selected">Selected</option>
+            <option value="rejected">Rejected</option>
+        </select>
+
+        <button type="submit">Add</button>
+    </form>
+</div>
+
+<!-- JOB TABLE -->
+<div class="card" style="overflow-x:auto;">
+    <h3>📋 Job Applications</h3>
+
+    <table>
+        <tr>
+            <th>Company</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Date</th>
+            <th>Actions</th>
+        </tr>
+
+        {% for job in jobs %}
+        <tr>
+            <td>{{ job.company }}</td>
+            <td>{{ job.role }}</td>
+            <td>
+                {% if job.status == "applied" %}
+                    <span style="color: orange; font-weight: bold;">Applied</span>
+
+                {% elif job.status == "interview_round_1" %}
+                    <span style="color: blue; font-weight: bold;">Interview R1</span>
+
+                {% elif job.status == "interview_round_2" %}
+                    <span style="color: purple; font-weight: bold;">Interview R2</span>
+
+                {% elif job.status == "selected" %}
+                    <span style="color: green; font-weight: bold;">Selected 🎉</span>
+
+                {% elif job.status == "rejected" %}
+                    <span style="color: red; font-weight: bold;">Rejected</span>
+
+                {% else %}
+                    <span>{{ job.status }}</span>
+                {% endif %}
+            </td>
+            <td>{{ job.date }}</td>
+
+            <td>
+                <td>
+                    <div class="actions">
+
+                        <a href="/delete/{{ loop.index0 }}">
+                            <button class="delete-btn">Delete</button>
+                        </a>
+
+                        <form action="/update/{{ loop.index0 }}" method="post">
+                            <select name="status">
+                                <option value="applied">Applied</option>
+                                <option value="interview_round_1">R1</option>
+                                <option value="interview_round_2">R2</option>
+                                <option value="selected">Selected</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+
+                            <button class="update-btn">Update</button>
+                        </form>
+
+                    </div>
+                </td>
+            </td>
+        </tr>
+        {% endfor %}
+
+    </table>
+</div>
+
+<!-- STATS -->
+<div style="display:flex; gap:15px; flex-wrap:wrap;">
+
+    <div class="stat-card">
+        <h4>Total</h4>
+        <p>{{ total }}</p>
+    </div>
+
+    <div class="stat-card applied">
+        <h4>Applied</h4>
+        <p>{{ applied }}</p>
+    </div>
+
+    <div class="stat-card r1">
+        <h4>R1</h4>
+        <p>{{ r1 }}</p>
+    </div>
+
+    <div class="stat-card r2">
+        <h4>R2</h4>
+        <p>{{ r2 }}</p>
+    </div>
+
+    <div class="stat-card selected">
+        <h4>Selected</h4>
+        <p>{{ selected }}</p>
+    </div>
+
+    <div class="stat-card rejected">
+        <h4>Rejected</h4>
+        <p>{{ rejected }}</p>
+    </div>
+
+</div>
+
+<div class="card">
+    <h3>📊 Job Status Graph</h3>
+
+    {% if graph_path %}
+        <img src="{{ graph_path }}" 
+     style="width:100%; max-width:400px; display:block; margin:auto; border-radius:10px;">
+    {% else %}
+        <p>No data to show</p>
+    {% endif %}
+</div>
+
+</body>
+</html>
